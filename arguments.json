@@ -1,6 +1,8 @@
 {
-    "unload_select_query_file_directory": "~/unload_select_query.sql",
-    "unload_to_s3_uri": "s3://",
-    "share_exclusive_s3_uri": "s3://data-share-only-bucket/",
-    "transfer_target_s3_uri": ""
+    "unload_select_query_file_directory": "./unload_select_query.sql",
+    "unload_to_s3_uri": "s3://quark-sandbox/unload-data/2022-09-11-practice-sales/",
+    "share_exclusive_s3_uri": "s3://data-share-only-bucket/2022-09-11-practice-sales/",
+    "transfer_target_s3_uri": "s3://s3-share-data-receive/2022-09-11-practice-user/",
+    "workgroup": "primary",
+    "s3_output": "s3://query-results-bucker/primary_folder/"
 }

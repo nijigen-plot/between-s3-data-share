@@ -1,0 +1,1 @@
+SELECT * FROM main_data.practice_sales
