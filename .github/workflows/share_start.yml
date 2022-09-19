@@ -1,11 +1,14 @@
 name : データ転送実行
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
-      - master
+      - transfer/**
 
 jobs:
-  build:
+  if_merged:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
