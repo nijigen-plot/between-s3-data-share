@@ -24,6 +24,12 @@ def datetime_to_bucket_string(time_data : datetime):
         str_time_data = str_time_data.replace(char, '.')
     return str_time_data[:-6]
 
+def delete_objects(path : str, session : boto3.Session):
+    wr.s3.delete_objects(
+        path,
+        boto3_session=session
+    )
+
 def main():
     # arguments.jsonのデータを読み込む
     params = json.load(
@@ -33,36 +39,23 @@ def main():
     unload_select_query = open(
         unload_select_query_file_directory, 'r'
         ).read()
+    now = get_time_of_now()
     unload_to_s3_uri = params['unload_to_s3_uri']
     share_exclusive_s3_uri = params['share_exclusive_s3_uri']
     transfer_target_s3_uri = params['transfer_target_s3_uri']
     workgroup = params['workgroup']
     s3_output = params['s3_output']
-    result_save_s3_uri = params['result_save_s3_uri']
-    # バケットのフォルダ名に現在時刻を付ける
-    now = get_time_of_now()
-    now_bucket_string = datetime_to_bucket_string(now)
-    unload_to_s3_uri += now_bucket_string + "/"
-    share_exclusive_s3_uri += now_bucket_string + "/"
-    transfer_target_s3_uri += now_bucket_string + "/"
-    result_save_s3_uri += now_bucket_string + ".json"
+    result_save_s3_uri = params['result_save_s3_uri'] + datetime_to_bucket_string(now) + ".json"
     unload_query = f"""
     UNLOAD( {unload_select_query} )
     TO '{unload_to_s3_uri}'
     WITH ( format = 'PARQUET')
     """
 
-    # UNLOADするuriが既に存在しているかを確認
-    for uri in [unload_to_s3_uri, share_exclusive_s3_uri, transfer_target_s3_uri, result_save_s3_uri]:
-        bucket_exist = wr.s3.does_object_exist(
-            path=uri,
-            boto3_session=session,
-            s3_additional_kwargs={
-            "ACL":"bucket-owner-full-control"
-        }
-        )
-        if bucket_exist:
-            raise FileExistsError("指定したバケットは既に存在しています。")
+    # 関わる全てのバケットについて事前にバケットの内容を削除する
+    delete_objects(unload_to_s3_uri, session)
+    delete_objects(share_exclusive_s3_uri, session)
+    delete_objects(transfer_target_s3_uri, session)
     
     # UNLOAD実行 unload_resultからはQueryExecutionIdを取得する
     unload_result = wr.athena.start_query_execution(
@@ -94,10 +87,7 @@ def main():
         paths=share_objects,
         source_path=share_exclusive_s3_uri,
         target_path=transfer_target_s3_uri,
-        boto3_session=session,
-        s3_additional_kwargs={
-            "ACL":"bucket-owner-full-control"
-        }
+        boto3_session=session
     )
     # 実行結果を保存
     result_dict = {
