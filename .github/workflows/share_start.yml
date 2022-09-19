@@ -4,11 +4,12 @@ on:
     types:
       - closed
     branches:
-      - transfer/**
+      - master
 
 jobs:
   if_merged:
     if: github.event.pull_request.merged == true
+    if: startsWith(github.head_ref, 'transfer/')
     runs-on: ubuntu-20.04
     timeout-minutes: 20
     env:
