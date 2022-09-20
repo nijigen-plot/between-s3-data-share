@@ -10,6 +10,7 @@ awswrangler = "^2.16.1"
 pandas = "^1.4.4"
 
 [tool.poetry.dev-dependencies]
+ipykernel = "^6.15.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
