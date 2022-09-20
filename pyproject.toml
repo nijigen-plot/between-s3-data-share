@@ -23,7 +23,7 @@ profile = "black"
 
 [tool.flake8]
 max-line-length = 119
-extend-ignore = E203
+extend-ignore = "E203"
 exclude = ".venv"
 
 [build-system]
