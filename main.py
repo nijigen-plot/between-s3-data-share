@@ -100,8 +100,9 @@ def main():
     save_result = wr.s3.to_json(
         df=result_df,
         path=result_save_s3_uri,
-        index=False,
-        boto3_session=session
+        boto3_session=session,
+        orient='records',
+        lines=True
     )
     print(f"share completed. log file were saved to {save_result}")
 if __name__ == "__main__":
