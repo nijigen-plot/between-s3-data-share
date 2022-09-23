@@ -4,6 +4,5 @@
     "share_exclusive_s3_uri": "s3://data-share-only-bucket/practice-sales/",
     "transfer_target_s3_uri": "s3://s3-share-data-receive/practice-sales-2/",
     "workgroup": "primary",
-    "s3_output": "s3://query-results-bucker/primary_folder/",
-    "result_save_s3_uri": "s3://data-share-only-bucket/save-logs/"
+    "s3_output": "s3://query-results-bucker/primary_folder/"
 }
