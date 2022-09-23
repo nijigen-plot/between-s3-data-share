@@ -2,7 +2,7 @@
     "unload_select_query_file_directory": "./unload_select_query.sql",
     "unload_to_s3_uri": "s3://quark-sandbox/unload-data/practice-sales/",
     "share_exclusive_s3_uri": "s3://data-share-only-bucket/practice-sales/",
-    "transfer_target_s3_uri": "s3://s3-share-data-receive/practice-sales/",
+    "transfer_target_s3_uri": "s3://s3-share-data-receive/practice-sales-1/",
     "workgroup": "primary",
     "s3_output": "s3://query-results-bucker/primary_folder/",
     "result_save_s3_uri": "s3://data-share-only-bucket/save-logs/"
