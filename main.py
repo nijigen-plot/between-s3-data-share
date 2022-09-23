@@ -24,7 +24,6 @@ def main():
     share_exclusive_s3_uri = params["share_exclusive_s3_uri"]
     transfer_target_s3_uri = params["transfer_target_s3_uri"]
     workgroup = params["workgroup"]
-    s3_output = params["s3_output"]
     unload_query = f"""
     UNLOAD( {unload_select_query} )
     TO '{unload_to_s3_uri}'
@@ -37,9 +36,7 @@ def main():
     delete_objects(transfer_target_s3_uri, session)
 
     # UNLOAD実行 unload_resultからはQueryExecutionIdを取得する
-    wr.athena.start_query_execution(
-        unload_query, s3_output=s3_output, boto3_session=session, workgroup=workgroup, wait=True
-    )
+    wr.athena.start_query_execution(unload_query, boto3_session=session, workgroup=workgroup, wait=True)
 
     # 共有バケットへのコピーを実行
     unload_objects = wr.s3.list_objects(path=unload_to_s3_uri, boto3_session=session)
