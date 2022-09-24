@@ -3,6 +3,7 @@ import os
 
 import awswrangler as wr
 import boto3
+from botocore.exceptions import ClientError
 
 session = boto3.Session(
     aws_access_key_id=os.environ.get("AWS_ACCESS_KEY"),
@@ -11,8 +12,12 @@ session = boto3.Session(
 )
 
 
-def delete_objects(path: str, session: boto3.Session):
-    wr.s3.delete_objects(path, boto3_session=session)
+def object_length_check(path: str, session: boto3.Session):
+    object_length = len(wr.s3.list_objects(path=path, boto3_session=session))
+    if object_length >= 1:
+        raise ValueError("target uri already contains a object")
+    else:
+        pass
 
 
 def main():
@@ -30,28 +35,32 @@ def main():
     WITH ( format = 'PARQUET')
     """
 
-    # 関わる全てのバケットについて事前にバケットの内容を削除する
-    delete_objects(unload_to_s3_uri, session)
-    delete_objects(share_exclusive_s3_uri, session)
-    delete_objects(transfer_target_s3_uri, session)
+    # 共有と転送先について既にオブジェクトがある場合は実行を終了する
+    object_length_check(share_exclusive_s3_uri, session)
+    object_length_check(transfer_target_s3_uri, session)
 
-    # UNLOAD実行 unload_resultからはQueryExecutionIdを取得する
+    # UNLOAD実行 TOのフォルダ内に既にオブジェクトが存在する場合、実行は失敗する
     wr.athena.start_query_execution(unload_query, boto3_session=session, workgroup=workgroup, wait=True)
 
-    # 共有バケットへのコピーを実行
+    # 共有バケットへのコピーを実行 なんらかのエラーが発生した場合はUNLOADにより保存されたオブジェクトを削除する必要が有る
     unload_objects = wr.s3.list_objects(path=unload_to_s3_uri, boto3_session=session)
     wr.s3.copy_objects(
         paths=unload_objects, source_path=unload_to_s3_uri, target_path=share_exclusive_s3_uri, boto3_session=session
     )
 
-    # 異なるアカウントのS3バケットへのコピーを実行
+    # 異なるアカウントのS3バケットへのコピーを実行 権限周りで失敗した場合は共有バケットへコピーしたデータを削除する
     share_objects = wr.s3.list_objects(path=share_exclusive_s3_uri, boto3_session=session)
-    wr.s3.copy_objects(
-        paths=share_objects,
-        source_path=share_exclusive_s3_uri,
-        target_path=transfer_target_s3_uri,
-        boto3_session=session,
-    )
+    try:
+        wr.s3.copy_objects(
+            paths=share_objects,
+            source_path=share_exclusive_s3_uri,
+            target_path=transfer_target_s3_uri,
+            boto3_session=session,
+        )
+    except ClientError:
+        wr.s3.delete_objects(path=share_exclusive_s3_uri, boto3_session=session)
+        print("The operation did not complete. Please check IAM permissions.")
+        raise Exception(ClientError)
 
 
 if __name__ == "__main__":
