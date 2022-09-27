@@ -1,23 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Setup for data transfer between S3 bucket accounts
 
-Parameters:
-  S3BucketName:
-    Type: String
-    Default: data-share-only
-  UserName:
-    Type: String
-    Default: S3-data-transfer
-
 Resources:
   CreateUser:
     Type: AWS::IAM::User
     Properties:
-      UserName: !Sub ${UserName}
+      UserName: S3-data-transfer
   CreateShareS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${S3BucketName}
+      BucketName: data-share-only
   CreateAthenaUnloadPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -44,8 +36,8 @@ Resources:
               - "arn:aws:s3:::query-results-bucker"
               - "arn:aws:s3:::quark-sandbox/*"
               - "arn:aws:s3:::quark-sandbox"
-              - !Sub "arn:aws:s3:::${S3BucketName}/*"
-              - !Sub "arn:aws:s3:::${S3BucketName}"
+              - "arn:aws:s3:::data-share-only/*"
+              - "arn:aws:s3:::data-share-only"
           - Sid: "AthenaAccess"
             Effect: "Allow"
             Action: 
@@ -104,7 +96,6 @@ Resources:
             Action: 
               - "s3:ListBucket"
               - "s3:PutObject"
-              - "s3:DeleteObject"
             Resource: 
               - "arn:aws:s3:::s3-share-data-receive/*"
               - "arn:aws:s3:::s3-share-data-receive"
@@ -126,10 +117,10 @@ Resources:
               - "s3:ListBucketMultipartUploads"
               - "s3:GetBucketLocation"
             Resource: 
-              - !Sub "arn:aws:s3:::${S3BucketName}/*"
-              - !Sub "arn:aws:s3:::${S3BucketName}"
+              - "arn:aws:s3:::data-share-only/*"
+              - "arn:aws:s3:::data-share-only"
             Condition: 
               ArnNotEquals: 
                 aws:PrincipalArn: 
-                  - !Sub "arn:aws:iam::${AWS::AccountId}:user/${UserName}"
+                  - !Sub "arn:aws:iam::${AWS::AccountId}:user/S3-data-transfer"
       Bucket: !Ref CreateShareS3Bucket
